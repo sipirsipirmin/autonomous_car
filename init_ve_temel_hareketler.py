@@ -8,6 +8,12 @@ import socket
 
 GPIO.setmode(GPIO.BOARD)
 
+class temel_hareketler:
+	fiki = 2
+	def __init__(self):
+		self.sol_p = 5
+	def yaz(self):
+		print fiki
 sol_pin_1 = 36
 sol_pin_2 = 38
 sol_pin_pwm   = 40
