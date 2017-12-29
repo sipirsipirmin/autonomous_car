@@ -22,26 +22,32 @@ class temel_hareketler:
 	pwm_sag = 		None
 	pwm_sol = 		None
 
-	def __init__(self):
+	def __enter__(self):
 		self.sol_pin_1 = 36
-        self.sol_pin_2 = 38
-        self.sol_pin_pwm   = 40
+		self.sol_pin_2 = 38
+		self.sol_pin_pwm   = 40
 
-        self.sag_pin_1 =  11
-        self.sag_pin_2 = 15
-        self.sag_pin_pwm   = 7
+		self.sag_pin_1 =  11
+		self.sag_pin_2 = 15
+		self.sag_pin_pwm   = 7
 
 		self.baglanti_kur()
 		self.init_sag()
 		self.init_sol()
+		return self
+	def __exit__(self, exc_type, exc_value, traceback):
+		self.pwm_sag.ChangeDutyCycle(0)
+		self.pwm_sol.ChangeDutyCycle(0)
+		GPIO.cleanup()
 
-    def baglanti_kur(self):
-    	serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	def baglanti_kur(self):
+		print "baglantı bekleniyor"
+		serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    	serversocket.bind(('', self.port))
-    	serversocket.listen(5)
-    	(self.clientsocket, address) = serversocket.accept()
-
+		serversocket.bind(('', self.port))
+		serversocket.listen(5)
+		(self.clientsocket, address) = serversocket.accept()
+		print "baglantı geldi"
 
 	def init_sag(self): #pwm_sol dönderecek
 		#---------- sag teker -------------------
