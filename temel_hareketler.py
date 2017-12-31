@@ -39,7 +39,10 @@ class temel_hareketler:
 		self.pwm_sag.ChangeDutyCycle(0)
 		self.pwm_sol.ChangeDutyCycle(0)
 		GPIO.cleanup()
-
+	def hiz(self,hiz): # ikisine de aynı değeri ata
+		self.pwm_sag.ChangeDutyCycle(hiz)
+		self.pwm_sol.ChangeDutyCycle(hiz)
+	
 	def baglanti_kur(self):
 		print "baglantı bekleniyor"
 		serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,7 +53,7 @@ class temel_hareketler:
 		print "baglantı geldi"
 
 	def init_sag(self): #pwm_sol dönderecek
-		#---------- sag teker -------------------
+		#---------- sag teker -------------------#
 		GPIO.setup(self.sag_pin_1,GPIO.OUT)
 		GPIO.setup(self.sag_pin_2,GPIO.OUT)
 		GPIO.setup(self.sag_pin_pwm,GPIO.OUT) #pwm
