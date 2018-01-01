@@ -9,8 +9,8 @@ import socket
 GPIO.setmode(GPIO.BOARD)
 
 class temel_hareketler:
-	clientsocket = 	None
 	port = 			5003
+	clientsocket = 	None
 
 	sol_pin_1 = 	None
 	sol_pin_2 = 	None
@@ -21,6 +21,9 @@ class temel_hareketler:
 
 	pwm_sag = 		None
 	pwm_sol = 		None
+
+	hiz = 10
+	artis_miktari = 2
 
 	def __enter__(self):
 		self.sol_pin_1 = 36
@@ -35,14 +38,36 @@ class temel_hareketler:
 		self.init_sag()
 		self.init_sol()
 		return self
+
 	def __exit__(self, exc_type, exc_value, traceback):
 		self.pwm_sag.ChangeDutyCycle(0)
 		self.pwm_sol.ChangeDutyCycle(0)
 		GPIO.cleanup()
-	def hiz(self,hiz): # ikisine de aynı değeri ata
+
+	def hizlan(self):
+		if self.hiz > -10:
+			self.ileri()
+			if self.hiz < 0:  # -10,+10 aralığında motorlar bir reaksiyon göstermediği için bu aralığı atlıyoz
+				self.hiz = 10 # -10,+10 aralığında motorlar bir reaksiyon göstermediği için bu aralığı atlıyoz
+		self.hiz = self.hiz + self.artis_miktari
+
+		self.hiz_ata(abs(self.hiz))
+		
+	def yavasla(self):
+		if self.hiz < 10:
+			self.geri()
+			if self.hiz > 0:    # -10,+10 aralığında motorlar bir reaksiyon göstermediği için bu aralığı atlıyoz
+				self.hiz = -10 # -10,+10 aralığında motorlar bir reaksiyon göstermediği için bu aralığı atlıyoz
+		self.hiz = self.hiz - self.artis_miktari
+		self.hiz_ata(abs(self.hiz))
+
+	def duzelt(self):
+		self.hiz_ata(self.hiz)
+
+	def hiz_ata(self,hiz): # ikisine de aynı değeri ata
 		self.pwm_sag.ChangeDutyCycle(hiz)
 		self.pwm_sol.ChangeDutyCycle(hiz)
-	
+
 	def baglanti_kur(self):
 		print "baglantı bekleniyor"
 		serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,19 +77,19 @@ class temel_hareketler:
 		(self.clientsocket, address) = serversocket.accept()
 		print "baglantı geldi"
 
-	def init_sag(self): #pwm_sol dönderecek
-		#---------- sag teker -------------------#
-		GPIO.setup(self.sag_pin_1,GPIO.OUT)
-		GPIO.setup(self.sag_pin_2,GPIO.OUT)
-		GPIO.setup(self.sag_pin_pwm,GPIO.OUT) #pwm
 
-		GPIO.output(self.sag_pin_1,False)
-		GPIO.output(self.sag_pin_2,True)
 
-		self.pwm_sag = GPIO.PWM(self.sag_pin_pwm,50)
+	def sol(self):
+		try:
+			self.pwm_sag.ChangeDutyCycle(int(abs(self.hiz) + abs(self.hiz)*1.5))
+		except ValueError:
+			print "top speed"
 
-		self.pwm_sag.start(0)
-
+	def sag(self):
+		try:
+			self.pwm_sol.ChangeDutyCycle(int(abs(self.hiz) + abs(self.hiz)*1.5))
+		except ValueError:
+			print "top speed"
 
 	def init_sol(self): # pwm_sag dönderecek
 		#---------- sol teker -------------------
@@ -79,17 +104,18 @@ class temel_hareketler:
 
 		self.pwm_sol.start(0)
 
-	def sol(self,hiz,d_hizi):
-		try:
-			self.pwm_sag.ChangeDutyCycle(int(abs(hiz) + abs(d_hizi)))
-		except ValueError:
-			print "top speed"
+	def init_sag(self): #pwm_sol dönderecek
+		#---------- sag teker -------------------#
+		GPIO.setup(self.sag_pin_1,GPIO.OUT)
+		GPIO.setup(self.sag_pin_2,GPIO.OUT)
+		GPIO.setup(self.sag_pin_pwm,GPIO.OUT) #pwm
 
-	def sag(self,hiz,d_hizi):
-		try:
-			self.pwm_sol.ChangeDutyCycle(int(abs(hiz) + abs(d_hizi)))
-		except ValueError:
-			print "top speed"
+		GPIO.output(self.sag_pin_1,False)
+		GPIO.output(self.sag_pin_2,True)
+
+		self.pwm_sag = GPIO.PWM(self.sag_pin_pwm,50)
+
+		self.pwm_sag.start(0)
 
 	def ileri(self):
 		GPIO.output(self.sol_pin_1,False)
